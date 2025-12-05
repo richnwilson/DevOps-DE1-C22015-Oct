@@ -1,0 +1,74 @@
+-- V1 - Initial Schema for MovieLens Dataset
+-- Author: Mark Purcell (markpurcell@ie.ibm.com)
+
+SET schema '${schema_name}';
+
+-----------------------------------------------------------------------------
+
+-- MOVIES TABLE (main movie information from movies_metadata.csv)
+CREATE TABLE MOVIES (
+  ID                    INTEGER NOT NULL,
+  IMDB_ID               VARCHAR(20),
+  TITLE                 VARCHAR(500) NOT NULL,
+  ORIGINAL_TITLE        VARCHAR(500),
+  OVERVIEW              TEXT,
+  RELEASE_DATE          DATE,
+  BUDGET                BIGINT,
+  REVENUE               BIGINT,
+  RUNTIME               DECIMAL(5,1),
+  ADULT                 BOOLEAN DEFAULT FALSE,
+  POPULARITY            DECIMAL(10,6),
+  VOTE_AVERAGE          DECIMAL(3,1),
+  VOTE_COUNT            INTEGER,
+  STATUS                VARCHAR(50),
+  TAGLINE               VARCHAR(1000),
+  ORIGINAL_LANGUAGE     VARCHAR(10),
+  BELONGS_TO_COLLECTION TEXT,
+  HOMEPAGE              VARCHAR(500),
+  POSTER_PATH           VARCHAR(200),
+  PRODUCTION_COMPANIES  TEXT,
+  PRODUCTION_COUNTRIES  TEXT,
+  SPOKEN_LANGUAGES      VARCHAR(500),
+  VIDEO                 BOOLEAN DEFAULT FALSE
+);
+
+ALTER TABLE MOVIES ADD CONSTRAINT MOVIES_PK PRIMARY KEY (ID);
+
+-- GENRES TABLE
+CREATE TABLE GENRES (
+  GENRE_ID  INTEGER NOT NULL,
+  NAME      VARCHAR(100) NOT NULL
+);
+
+ALTER TABLE GENRES ADD CONSTRAINT GENRE_PK PRIMARY KEY (GENRE_ID);
+ALTER TABLE GENRES ADD CONSTRAINT GENRE_UK UNIQUE (NAME);
+
+-- MOVIE_GENRES TABLE (many-to-many relationship between movies and genres)
+-- This will store the parsed genres from the JSON array in movies_metadata.csv
+CREATE TABLE MOVIE_GENRES (
+  MOVIE_ID  INTEGER NOT NULL,
+  GENRE_ID  INTEGER NOT NULL
+);
+
+ALTER TABLE MOVIE_GENRES ADD CONSTRAINT MOVIE_GENRES_PK PRIMARY KEY (MOVIE_ID, GENRE_ID);
+ALTER TABLE MOVIE_GENRES ADD CONSTRAINT MOVIE_GENRES_MOVIE_FK FOREIGN KEY (MOVIE_ID) REFERENCES MOVIES(ID);
+ALTER TABLE MOVIE_GENRES ADD CONSTRAINT MOVIE_GENRES_GENRE_FK FOREIGN KEY (GENRE_ID) REFERENCES GENRES(GENRE_ID);
+
+-- RATINGS TABLE (from ratings.csv)
+CREATE TABLE RATINGS (
+  USER_ID     INTEGER NOT NULL,
+  MOVIE_ID    INTEGER NOT NULL,
+  RATING      DECIMAL(2,1) NOT NULL,
+  TIMESTAMP   BIGINT NOT NULL
+);
+
+ALTER TABLE RATINGS ADD CONSTRAINT RATINGS_PK PRIMARY KEY (USER_ID, MOVIE_ID);
+
+-- LINKS TABLE (from links.csv - connects movieId to imdbId and tmdbId)
+CREATE TABLE LINKS (
+  MOVIE_ID  INTEGER NOT NULL,  -- corresponds to movieId in ratings.csv
+  IMDB_ID   VARCHAR(20),       -- IMDb identifier
+  TMDB_ID   INTEGER            -- corresponds to id in movies_metadata.csv
+);
+
+ALTER TABLE LINKS ADD CONSTRAINT LINKS_PK PRIMARY KEY (MOVIE_ID);
